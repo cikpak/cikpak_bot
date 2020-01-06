@@ -3,43 +3,57 @@ from telebot import types
 from config import TOKEN
 import database.data_service.db_service as ds
 from database.set_db import init_database
-import utils.instruments as f
+from utils.instruments import is_city
 import state
-from utils.forecast_service import get_forecast_by_city, get_forecast_by_location
-from keyboards import current_keyboard, main_keyboard, settings_keyboard
-from utils.weather_service import get_weather_by_coords, get_weather_by_city
+from utils.forecast_service import Forecast
+from keyboards import method_keyboard, main_keyboard, settings_keyboard
+from utils.weather_service import Weather
 
 bot = telebot.TeleBot(TOKEN)
-
 remove_keyboard = types.ReplyKeyboardRemove()
 
 
-@bot.message_handler(func=lambda message: message.text == 'Location')
-def location_handler(message):
-    bot.reply_to(message, 'Please send your current location')
-    bot.register_next_step_handler(message, handle_location_weather)
-
-
-def handle_location_weather(message):
-    location = get_forecast_by_location(message.location)
-    bot.send_message(message.chat.id, location)
+@bot.message_handler(func=lambda message: message.text == 'Back')
+def back_handler(message):
+    bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
 
 
 @bot.message_handler(func=lambda message: message.text == 'Current')
-def current_handler(message):
-    bot.send_message(message.chat.id, 'Choose a option:', reply_markup=current_keyboard())
+def by_city_handler(message):
+    bot.reply_to(message, 'Send your location or enter city name', reply_markup=method_keyboard())
+    bot.register_next_step_handler(message, handle_weather)
+
+
+def handle_weather(message):
+    try:
+        weather = Weather(message.text)
+        bot.send_message(message.chat.id, str(weather))
+    except:
+        try:
+            weather = Weather(message.location)
+            bot.send_message(message.chat.id, str(weather))
+        except:
+            bot.reply_to(message, f'Something is wrong, check city name and try again')
+            bot.register_next_step_handler(message, handle_weather)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Forecast')
 def forecast_handler(message):
-    bot.reply_to(message, "Enter city name (ex: New York:)")
-    bot.register_next_step_handler(message, handle_forecast_request)
+    bot.reply_to(message, 'Send your location or enter city name', reply_markup=method_keyboard())
+    bot.register_next_step_handler(message, handle_forecast)
 
 
-def handle_forecast_request(message):
-    city = message.text
-    forecast = get_forecast_by_city(city)
-    bot.reply_to(message, forecast)
+def handle_forecast(message):
+    try:
+        forecast = Forecast(message.text)
+        bot.send_message(message.chat.id, str(forecast))
+    except:
+        try:
+            forecast = Forecast(message.location)
+            bot.send_message(message.chat.id, str(forecast))
+        except:
+            bot.reply_to(message, f'Something is wrong, check city name and try again')
+            bot.register_next_step_handler(message, handle_forecast)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Settings')
@@ -47,9 +61,9 @@ def settings_handler(message):
     bot.send_message(message.chat.id, 'Settings', reply_markup=settings_keyboard())
 
 
-@bot.message_handler(commands=['weather'])
-def handle_weather(message):
-    bot.send_message(message.chat.id, '/weather coming soon')
+# @bot.message_handler(commands=['weather'])
+# def handle_weather(message):
+#     bot.send_message(message.chat.id, '/weather coming soon')
 
 
 @bot.message_handler(commands=['start'])
@@ -73,16 +87,6 @@ def handle_start(message):
         bot.send_message(message.chat.id, f"Hello, {state.active_user.username}!")
 
     bot.send_message(message.chat.id, 'Choose a option:', reply_markup=main_keyboard())
-
-
-@bot.message_handler(func=lambda city, f=f.is_city: f(city))
-def handle_message(message):
-    print("city enter")
-    weather = get_weather_by_city(message.text)
-    if weather is not NameError:
-        bot.send_message(message.chat.id, weather)
-    else:
-        bot.reply_to(message, f'Something is wrong, check city name and try again')
 
 
 if __name__ == '__main__':

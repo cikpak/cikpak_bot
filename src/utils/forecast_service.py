@@ -1,72 +1,83 @@
 from pyowm import OWM
 from config import weatherAPI
 from datetime import datetime
-from utils.instruments import format_forecast_response
+from telebot.types import Location
 
 obs = OWM(weatherAPI)
 
 
-# TODO Rewrite forecast ass a class
+class Forecast:
+    def __init__(self, param):
+        self.cast = {}
+        self.forecast_by_days = {}
+        try:
+            if isinstance(param, str):
+                self.city = param
 
-def prepare_forecast(forecast_by_days):
-    forecast = {}
+                self.forecast = obs.three_hours_forecast(param).get_forecast()
 
-    for day in forecast_by_days.keys():
-        min = forecast_by_days[day][0].get_temperature(unit='celsius')['temp_min']
-        max = forecast_by_days[day][0].get_temperature(unit='celsius')['temp_max']
-        status = []
+            elif isinstance(param, Location):
+                self.lat = param.latitude
+                self.lon = param.longitude
 
-        for part in forecast_by_days[day]:
+                self.w = obs.three_hours_forecast_at_coords(lat=self.lat, lon=self.lon)
+                self.weather = self.w.get_forecast()
 
-            if part.get_temperature(unit='celsius')['temp_min'] < min:
-                min = part.get_temperature(unit='celsius')['temp_min']
+                self.city = self.w.get_location().get_name()
+        except TypeError as e:
+            print(e)
 
-            if part.get_temperature(unit='celsius')['temp_max'] > max:
-                max = part.get_temperature(unit='celsius')['temp_max']
+        self.divide_forecast_by_days()
+        self.prepare_forecast()
 
-            status.append(part.get_detailed_status())
-
-        forecast[day] = {'min': round(min), 'max': round(max), 'status': status}
-    return forecast
-
-
-def divide_forecast_by_days(forecast):
-    forecast_by_days = {}
-
-    for part in forecast:
-        if len(forecast_by_days.keys()) > 2:
-            break
-        day = datetime.fromtimestamp(part.get_reference_time()).date()
-        if day not in forecast_by_days.keys():
-            forecast_by_days[day] = []
-
-        for part in list(forecast):
-            try:
-                forecast_by_days[datetime.fromtimestamp(part.get_reference_time()).date()].append(part)
-            except:
+    def divide_forecast_by_days(self):
+        for part in self.forecast:
+            if len(self.forecast_by_days.keys()) > 2:
                 break
+            day = datetime.fromtimestamp(part.get_reference_time()).date()
+            if day not in self.forecast_by_days.keys():
+                self.forecast_by_days[day] = []
 
-    return forecast_by_days
+            for part in list(self.forecast):
+                try:
+                    self.forecast_by_days[datetime.fromtimestamp(part.get_reference_time()).date()].append(part)
+                except:
+                    break
 
+    def prepare_forecast(self):
 
-def get_forecast_by_city(city):
-    forecast = obs.three_hours_forecast(city).get_forecast()
-    forecast_by_days = divide_forecast_by_days(forecast)
-    stats_by_day = prepare_forecast(forecast_by_days)
+        for day in self.forecast_by_days.keys():
+            min = self.forecast_by_days[day][0].get_temperature(unit='celsius')['temp_min']
+            max = self.forecast_by_days[day][0].get_temperature(unit='celsius')['temp_max']
+            status = []
 
-    city_name = forecast.get_location().get_name()
+            for part in self.forecast_by_days[day]:
 
-    return format_forecast_response(stats_by_day, city_name)
+                if part.get_temperature(unit='celsius')['temp_min'] < min:
+                    min = part.get_temperature(unit='celsius')['temp_min']
 
+                if part.get_temperature(unit='celsius')['temp_max'] > max:
+                    max = part.get_temperature(unit='celsius')['temp_max']
 
-def get_forecast_by_location(location):
-    lat = location.latitude
-    lon = location.longitude
+                status.append(part.get_detailed_status())
 
-    forecast = obs.three_hours_forecast_at_coords(lat=lat, lon=lon).get_forecast()
-    forecast_by_days = divide_forecast_by_days(forecast)
-    stats_by_day = prepare_forecast(forecast_by_days)
+            self.cast[day] = {'min': round(min), 'max': round(max), 'status': status}
 
-    city_name = forecast.get_location().get_name()
+    def get_status_for_day(self, par: list):
+        status_count = 0
+        weather_status = ''
 
-    return format_forecast_response(stats_by_day, city_name)
+        for element in set(par):
+            if par.count(element) > status_count:
+                status_count = par.count(element)
+                weather_status = element
+
+        return weather_status
+
+    def __str__(self):
+        forecast_text = f"Forecast for {self.city.capitalize()}\n\n"
+        for day in self.cast:
+            status = self.get_status_for_day(self.cast[day]['status'])
+            forecast_text += f'Day: {day}\nStatus: {status}\nMax: {self.cast[day]["max"]}\nMin: {self.cast[day]["min"]}\n\n'
+
+        return forecast_text

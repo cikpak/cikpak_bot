@@ -1,15 +1,12 @@
 from telebot import types
 
 
-def current_keyboard():
+def method_keyboard():
     keyboard = types.ReplyKeyboardMarkup()
 
-    location = types.KeyboardButton("By location")
-    city = types.KeyboardButton("By city")
     add = types.KeyboardButton("Add location")
-
-    keyboard.row(location, city)
-    keyboard.row(add)
+    back = types.KeyboardButton('Back')
+    keyboard.row(add, back)
 
     return keyboard
 
@@ -21,8 +18,8 @@ def main_keyboard():
     city = types.KeyboardButton('Forecast')
     settings = types.KeyboardButton("Settings")
 
-    keyboard.row(location, settings)
-    keyboard.row(city)
+    keyboard.row(location, city)
+    keyboard.row(settings)
 
     return keyboard
 
@@ -31,7 +28,7 @@ def settings_keyboard():
     keyboard = types.ReplyKeyboardMarkup()
 
     units = types.KeyboardButton('Units')
-    back = types.KeyboardButton('back')
+    back = types.KeyboardButton('Back')
 
     keyboard.row(units)
     keyboard.row(back)

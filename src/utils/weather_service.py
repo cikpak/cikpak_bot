@@ -1,19 +1,34 @@
 from pyowm import OWM
 from config import weatherAPI
-from utils.instruments import format_weather_response
+from telebot.types import Location
 
 obs = OWM(weatherAPI)
 
 
-# TODO - Rewrite Weather as a class
+class Weather:
+    def __init__(self, param):
+        try:
+            if isinstance(param, str):
+                self.city = param
 
-def get_weather_by_city(city):
-    weather = obs.weather_at_place(city)
-    return format_weather_response(weather)
+                self.weather = obs.weather_at_place(self.city).get_weather()
 
+                self.temp = round(self.weather.get_temperature(unit='celsius')['temp'])
+                self.status = self.weather.get_status()
+                self.clouds = self.weather.get_clouds()
+            elif isinstance(param, Location):
+                self.lat = param.latitude
+                self.lon = param.longitude
 
-def get_weather_by_coords(location):
-    lat = location.latitude
-    lon = location.longitude
-    weather = obs.weather_at_coords(lat=lat, lon=lon)
-    return format_weather_response(weather)
+                self.w = obs.weather_at_coords(lat=self.lat, lon=self.lon)
+                self.weather = self.w.get_weather()
+
+                self.city = self.w.get_location().get_name()
+                self.temp = round(self.weather.get_temperature(unit='celsius')['temp'])
+                self.status = self.weather.get_status()
+                self.clouds = self.weather.get_clouds()
+        except TypeError as e:
+            print(e)
+
+    def __str__(self):
+        return f'There is the weather for {self.city}\n\nTemperature:  {self.temp}°C\n Weather:  {self.status}\n Clouds:  {self.clouds}'
