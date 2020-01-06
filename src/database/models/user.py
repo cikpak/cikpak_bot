@@ -7,7 +7,7 @@ class User(me.Document):
 	username = me.StringField()
 	email = me.EmailField()
 	language = me.StringField()
-
+	locations = me.ListField(me.StringField())
 	default_location = me.GeoPointField()
 	units = me.StringField(default='metric')
 

@@ -1,6 +1,3 @@
-from bson.objectid import ObjectId
-import mongoengine as me
-
 from database.models.user import User
 
 
@@ -17,6 +14,7 @@ def create_user(user_id: int, name: str, lastname: str, username: str, language:
 	user.lastname = lastname
 	user.username = username
 	user.language = language
+	user.locations = []
 
 	try:
 		user.save()

@@ -1,1 +1,0 @@
-WELCOME = 'Welcome to cikpak-weather-bot'
