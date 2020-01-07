@@ -5,14 +5,14 @@ from telebot.types import Location
 
 obs = OWM(weatherAPI)
 
-
+#TODO Forecast class can be better
 class Forecast:
     def __init__(self, param):
         self.cast = {}
         self.forecast_by_days = {}
         try:
             if isinstance(param, str):
-                self.city = param
+                self.location = param
 
                 self.forecast = obs.three_hours_forecast(param).get_forecast()
 
@@ -21,9 +21,10 @@ class Forecast:
                 self.lon = param.longitude
 
                 self.w = obs.three_hours_forecast_at_coords(lat=self.lat, lon=self.lon)
-                self.weather = self.w.get_forecast()
 
-                self.city = self.w.get_location().get_name()
+                self.forecast = w.get_forecast()
+
+                self.location = w.get_location().get_name()
         except TypeError as e:
             print(e)
 
@@ -75,9 +76,13 @@ class Forecast:
         return weather_status
 
     def __str__(self):
-        forecast_text = f"Forecast for {self.city.capitalize()}\n\n"
+        forecast_text = f"Forecast for {self.location.capitalize()}\n\n"
         for day in self.cast:
             status = self.get_status_for_day(self.cast[day]['status'])
             forecast_text += f'Day: {day}\nStatus: {status}\nMax: {self.cast[day]["max"]}\nMin: {self.cast[day]["min"]}\n\n'
 
         return forecast_text
+
+
+    def get_location(self):
+        return self.location

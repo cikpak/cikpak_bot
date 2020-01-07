@@ -3,9 +3,9 @@ from telebot import types
 
 def method_keyboard():
     keyboard = types.ReplyKeyboardMarkup()
-
     add = types.KeyboardButton("Add location")
     back = types.KeyboardButton('Back')
+
     keyboard.row(add, back)
 
     return keyboard

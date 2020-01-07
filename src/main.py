@@ -25,16 +25,20 @@ def by_city_handler(message):
 
 
 def handle_weather(message):
-    try:
-        weather = Weather(message.text)
-        bot.send_message(message.chat.id, str(weather))
-    except:
+    if message.text == 'Add location':
+        bot.send_message(message.chat.id, 'Please send city name or your location do add it in your favourites!')
+        bot.register_next_step_handler(message, add_location)
+    else:
         try:
-            weather = Weather(message.location)
+            weather = Weather(message.text)
             bot.send_message(message.chat.id, str(weather))
         except:
-            bot.reply_to(message, f'Something is wrong, check city name and try again')
-            bot.register_next_step_handler(message, handle_weather)
+            try:
+                weather = Weather(message.location)
+                bot.send_message(message.chat.id, str(weather))
+            except:
+                bot.reply_to(message, f'Something is wrong, check city name and try again')
+                bot.register_next_step_handler(message, handle_weather)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Forecast')
@@ -44,16 +48,22 @@ def forecast_handler(message):
 
 
 def handle_forecast(message):
-    try:
-        forecast = Forecast(message.text)
-        bot.send_message(message.chat.id, str(forecast))
-    except:
+
+    #TODO can be better and easyer
+    if message.text == 'Add location':
+        bot.send_message(message.chat.id, 'Please send city name or your location do add it in your favourites!')
+        bot.register_next_step_handler(message, add_location)
+    else:
         try:
-            forecast = Forecast(message.location)
+            forecast = Forecast(message.text)
             bot.send_message(message.chat.id, str(forecast))
         except:
-            bot.reply_to(message, f'Something is wrong, check city name and try again')
-            bot.register_next_step_handler(message, handle_forecast)
+            try:
+                forecast = Forecast(message.location)
+                bot.send_message(message.chat.id, str(forecast))
+            except:
+                bot.reply_to(message, f'Something is wrong, check city name and try again')
+                bot.register_next_step_handler(message, handle_forecast)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Settings')
@@ -61,9 +71,45 @@ def settings_handler(message):
     bot.send_message(message.chat.id, 'Settings', reply_markup=settings_keyboard())
 
 
-# @bot.message_handler(commands=['weather'])
-# def handle_weather(message):
-#     bot.send_message(message.chat.id, '/weather coming soon')
+def add_location(message):
+    #TODO can be better and easyer
+    #TODO add location to user location in db
+    if message.text != 'Back':
+        try:
+            city=''
+            if message.location:
+                #TODO find a way to get city name by coords without api call to owm
+                weather = Weather(message.location)
+                city = weather.get_location()
+            else:
+                city = message.text
+            
+            print(f'{city=}')
+            #TODO redraw keyboard with user's location
+        except:
+            print('error')
+    else:
+        bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+
+@bot.message_handler(func=lambda message: message.text == 'Units')
+def settings_handler(message):
+    bot.send_message(message.chat.id, 'Send C for celsius or F for farenheit')
+    bot.register_next_step_handler(message, handle_units_choise)
+
+
+def handle_units_choise(message):
+    if message.text != 'Back':
+        if message.text.capitalize() =='F' or message.text.capitalize() == 'C':
+            print(f'{message.text=}')
+            #TODO Rewrite user units in database
+
+        else:
+            bot.send_message(message.chat.id, 'Something is wrong, send again your choise!')
+            bot.register_next_step_handler(message, handle_units_choise)
+    else:
+        bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+
+    
 
 
 @bot.message_handler(commands=['start'])
