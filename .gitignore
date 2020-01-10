@@ -1,7 +1,6 @@
 .env
 src/utils/testing.py
 src/config.py
-src/database
 .idea
 .vscode
 env

@@ -12,19 +12,17 @@ class Forecast:
         self.forecast_by_days = {}
         try:
             if isinstance(param, str):
-                self.location = param
-
                 self.forecast = obs.three_hours_forecast(param).get_forecast()
-
+                self.location = self.forecast.get_location().get_name()
+                
             elif isinstance(param, Location):
                 self.lat = param.latitude
                 self.lon = param.longitude
 
-                self.w = obs.three_hours_forecast_at_coords(lat=self.lat, lon=self.lon)
-
-                self.forecast = w.get_forecast()
-
-                self.location = w.get_location().get_name()
+                self.forecast = obs.three_hours_forecast_at_coords(self.lat, self.lon).get_forecast()
+                print(type(self.forecast))
+                print(len(self.forecast))
+                self.location = self.forecast.get_location().get_name()
         except TypeError as e:
             print(e)
 
@@ -46,7 +44,6 @@ class Forecast:
                     break
 
     def prepare_forecast(self):
-
         for day in self.forecast_by_days.keys():
             min = self.forecast_by_days[day][0].get_temperature(unit='celsius')['temp_min']
             max = self.forecast_by_days[day][0].get_temperature(unit='celsius')['temp_max']

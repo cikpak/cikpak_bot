@@ -1,8 +1,11 @@
 from telebot import types
 
 
-def method_keyboard():
+def method_keyboard(locations):
     keyboard = types.ReplyKeyboardMarkup()
+    if len(locations) != 0:
+        for location in locations:
+            keyboard.row(types.KeyboardButton(location))
     add = types.KeyboardButton("Add location")
     back = types.KeyboardButton('Back')
 
