@@ -4,7 +4,7 @@ from config import TOKEN
 import database.data_service.db_service as ds
 from database.set_db import init_database
 from utils.instruments import is_city
-from state import get_active_user, active_user
+from state import get_active_user
 from utils.forecast_service import Forecast
 from keyboards import method_keyboard, main_keyboard, settings_keyboard
 from utils.weather_service import Weather
@@ -58,6 +58,8 @@ def forecast_handler(message):
 
 
 def handle_forecast(message):
+    #TODO can be better and easyer
+
     if message.text == 'Add location':
         bot.reply_to(message, 'Send your location or city name to add it to favourites!', reply_markup=remove_keyboard)
         bot.register_next_step_handler(message, add_location_with_forecast)
@@ -87,6 +89,7 @@ def settings_handler(message):
 
 def add_location_with_forecast(message):
     #TODO can be better and easyer
+
     active_user = get_active_user(message.from_user.id)
     if message.text != 'Back':
         try:
@@ -171,11 +174,12 @@ def units_handler(message):
 
 
 def handle_units_choise(message):
+
+    #TODO - title all and implement comparation between actual and new unit 
     active_user = get_active_user(message.from_user.id)
 
     if message.text != 'Back':
         if message.text.capitalize() =='F' or message.text.capitalize() == 'C':
-            #TODO Rewrite user units in database - 
             active_user.units = message.text
             active_user.save()
             bot.send_message(message.chat.id, f'Now you will receive weather in °{message.text}')

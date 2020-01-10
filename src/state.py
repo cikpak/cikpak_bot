@@ -11,10 +11,3 @@ def get_active_user(id: str) -> User:
     if not active_user:
         return ds.find_user_by_id(id)
     return active_user
-
-
-def update_active_user() -> User:
-    global active_user
-    active_user = ds.find_user_by_id(active_user.id)
-
-    return active_user

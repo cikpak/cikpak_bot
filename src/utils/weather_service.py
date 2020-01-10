@@ -4,7 +4,7 @@ from telebot.types import Location
 
 obs = OWM(weatherAPI)
 
-
+#TODO - weather class can be better
 class Weather:
     def __init__(self, param):
         try:
