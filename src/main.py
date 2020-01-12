@@ -24,7 +24,6 @@ def back_handler(message):
 @bot.message_handler(func=lambda message: message.text == 'Current')
 def by_city_handler(message):
     active_user = get_active_user(message.from_user.id)
-
     bot.reply_to(message, 'Send your location or enter city name', reply_markup=method_keyboard(active_user.locations))
     bot.register_next_step_handler(message, handle_weather)
 
@@ -37,18 +36,14 @@ def handle_weather(message):
         bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
     else:
         try:
-            weather = Weather(message.text)
-            bot.send_message(message.chat.id, str(weather))
-            bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+            active_user = get_active_user(message.from_user.id)
+            weather = Weather(message, active_user.units)
+            bot.send_message(message.chat.id, str(weather), parse_mode='HTML')
+            bot.send_message(message.chat.id, 'Return to main Menu', reply_markup=main_keyboard())
         except:
-            try:
-                weather = Weather(message.location)
-                bot.send_message(message.chat.id, str(weather))
-                bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-            except:
-                bot.reply_to(message, f'Something is wrong, check city name and try again')
-                bot.register_next_step_handler(message, handle_weather)
-
+            bot.reply_to(message, f'Something is wrong, check city name and try again')
+            bot.register_next_step_handler(message, handle_weather)
+                
 
 @bot.message_handler(func=lambda message: message.text == 'Forecast')
 def forecast_handler(message):
@@ -58,28 +53,20 @@ def forecast_handler(message):
 
 
 def handle_forecast(message):
-    #TODO can be better and easyer
-
+    active_user = get_active_user(message.from_user.id)
     if message.text == 'Add location':
         bot.reply_to(message, 'Send your location or city name to add it to favourites!', reply_markup=remove_keyboard)
         bot.register_next_step_handler(message, add_location_with_forecast)
     elif message.text == 'Back':
-        bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+        bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
     else:
         try:
-            forecast = Forecast(message.text)
-            bot.send_message(message.chat.id, str(forecast))
-            bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-
+            forecast = Forecast(message, active_user.units)
+            bot.send_message(message.chat.id, str(forecast), parse_mode='HTML')
+            bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
         except:
-            try:
-                forecast = Forecast(message.location)
-                bot.send_message(message.chat.id, str(forecast))
-                bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-
-            except:
-                bot.reply_to(message, f'Something is wrong, check city name and try again')
-                bot.register_next_step_handler(message, handle_forecast)
+            bot.reply_to(message, f'Something is wrong, check city name and try again')
+            bot.register_next_step_handler(message, handle_forecast)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Settings')
@@ -88,108 +75,71 @@ def settings_handler(message):
 
 
 def add_location_with_forecast(message):
-    #TODO can be better and easyer
-
     active_user = get_active_user(message.from_user.id)
     if message.text != 'Back':
-        try:
-            if message.location:
-                #TODO find a way to get city name by coords without api call to owm
-                forecast = Forecast(message.location)
-                city = forecast.get_location()
-                if city not in active_user.locations:
-                    active_user.locations.append(city.title())
-                    active_user.save()
+        forecast = Forecast(message, active_user.units)
+        city = forecast.get_location()
+        if city not in active_user.locations:
+            active_user.locations.append(city.title())
+            active_user.save()
 
-                    bot.reply_to(message, f'{city} was added to your favourites locations')
-                    bot.send_message(message.chat.id, str(forecast))
-                    bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+            bot.reply_to(message, f'{city} was added to your favourites locations')
+            bot.send_message(message.chat.id, str(forecast), parse_mode='HTML')
+            bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
 
-                else:
-                    bot.send_message(message.chat.id, f'{city} is already in your locations list')
-                    bot.send_message(message.chat.id, str(forecast))
-                    bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-
-            else:
-                forecast = Forecast(message.text)
-                city = message.text
-                if city not in active_user.locations:
-                    active_user.locations.append(city)
-                    active_user.save()
-                    bot.send_message(message.chat.id, f'{city} is already in your locations list')
-                    bot.send_message(message.chat.id, str(forecast))
-                    bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-
-                else:
-                    bot.send_message(message.chat.id, f'{city} is already in your locations list\n Enter other location or choose one from existings!')
-        except:
-            print('ERROR')
+        else:
+            bot.send_message(message.chat.id, f'{city} is already in your locations list\n There is forecast')
+            bot.send_message(message.chat.id, str(forecast), parse_mode='HTML')
+            bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
     else:
-        bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+        bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
 
     
 def add_location_with_weather(message):
-    #TODO can be better and easyer
     active_user = get_active_user(message.from_user.id)
     if message.text != 'Back':
-        try:
-            if message.location:
-                #TODO find a way to get city name by coords without api call to owm
-                weather = Weather(message.location)
-                city = weather.get_location()
-                if city not in active_user.locations:
-                    active_user.locations.append(city.title())
-                    active_user.save()
+        weather = Weather(message, active_user.units)
+        city = weather.get_location()
+        if city not in active_user.locations:
+            active_user.locations.append(city)
+            active_user.save()
 
-                    bot.reply_to(message, f'{city} was added to your favourites locations')
-                    bot.send_message(message.chat.id, str(weather))
-                    bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-
-                else:
-                    bot.send_message(message.chat.id, f'{city} is already in your locations list')
-                    bot.send_message(message.chat.id, str(weather))
-                    bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-
-            else:
-                weather = Weather(message.text)
-                city = message.text
-                if city not in active_user.locations:
-                    active_user.locations.append(city)
-                    active_user.save()
-                    bot.send_message(message.chat.id, f'{city} is already in your locations list')
-                    bot.send_message(message.chat.id, str(weather))
-                    bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-
-                else:
-                    bot.send_message(message.chat.id, f'{city} is already in your locations list\n Enter other location or choose one from existings!')
-        except:
-            print('ERROR')
+            bot.reply_to(message, f'{city} was added to your favourites locations')
+            bot.send_message(message.chat.id, str(weather), parse_mode='HTML')
+            bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
+        else:
+            bot.send_message(message.chat.id, f'{city} is already in your locations list')
+            bot.send_message(message.chat.id, str(weather), parse_mode='HTML')
+            bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
     else:
-        bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+        bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
 
 @bot.message_handler(func=lambda message: message.text == 'Units')
 def units_handler(message):
+    active_user = get_active_user(message.from_user.id)
+    bot.send_message(message.chat.id, f'Your curent units -> {active_user.units}')
     bot.send_message(message.chat.id, 'Send C for celsius or F for farenheit')
     bot.register_next_step_handler(message, handle_units_choise)
 
 
 def handle_units_choise(message):
-
-    #TODO - title all and implement comparation between actual and new unit 
     active_user = get_active_user(message.from_user.id)
-
+    new_units = message.text.title()
     if message.text != 'Back':
-        if message.text.capitalize() =='F' or message.text.capitalize() == 'C':
-            active_user.units = message.text
-            active_user.save()
-            bot.send_message(message.chat.id, f'Now you will receive weather in °{message.text}')
-            bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
-            
+        if new_units in ['C', 'F']:
+            if new_units != active_user.units:
+                active_user.units = message.text.title()
+                active_user.save()
+                bot.send_message(message.chat.id, f'Now you will receive weather in °{message.text}')
+                bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
+            else:
+                bot.send_message(message.chat.id, f'Your already receive weather and forecast in °{message.text}')
+                bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
         else:
-            bot.send_message(message.chat.id, 'Something is wrong, send again your choise!')
+            bot.send_message(message.chat.id, 'Something is wrong, send again or verify entered units!')
             bot.register_next_step_handler(message, handle_units_choise)
     else:
-        bot.send_message(message.chat.id, 'Main Menu', reply_markup=main_keyboard())
+        bot.send_message(message.chat.id, 'Returned to main Menu', reply_markup=main_keyboard())
 
     
 
