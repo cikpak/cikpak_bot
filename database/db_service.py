@@ -1,4 +1,4 @@
-from database.models.user import User
+from database.user import User
 
 def find_user_by_id(id: str) -> User:
 	user = User.objects(telegram_id=str(id)).first()

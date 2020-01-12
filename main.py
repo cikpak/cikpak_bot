@@ -1,14 +1,14 @@
 import telebot
 from telebot import types
 from config import TOKEN
-import database.data_service.db_service as ds
+from database.db_service import create_user, find_user_by_id
 from database.set_db import init_database
 from utils.instruments import is_city
 from state import get_active_user
 from utils.forecast_service import Forecast
 from keyboards import method_keyboard, main_keyboard, settings_keyboard
 from utils.weather_service import Weather
-from database.models.user import User
+from database.user import User
 
 
 bot = telebot.TeleBot(TOKEN)
