@@ -4,7 +4,6 @@ from typing import Optional
 
 active_user: Optional[User] = None
 
-
 def get_active_user(id: str) -> User:
     global active_user
     if not active_user:
