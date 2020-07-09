@@ -10,7 +10,6 @@ obs = OWM(weatherAPI)
 
 class Weather:
     def __init__(self, message, units):
-        print('init')
         self.units = units
 
         if units == 'C':
@@ -18,25 +17,31 @@ class Weather:
         else:
             temp_unit = 'fahrenheit'
 
-        if not message.location:
-            self.location = message.text.title()
-            print(message)
-
-            weather = obs.weather_manager().weather_at_place(message.text).weather
+        if type(message) == str:
+            print('string')
+            self.location = message
+            weather = obs.weather_manager().weather_at_place(message).weather
             self.temp = round(weather.temperature(unit=temp_unit)['temp'])
 
-            print(weather.temperature)
             self.clouds = weather.clouds
             self.status_code = weather.weather_code
         else:
-            lat = message.location.latitude
-            lon = message.location.longitude
-            weather = obs.weather_manager().weather_at_coords(lat=lat, lon=lon)
+            if not message.location:
+                self.location = message.text.title()
+                weather = obs.weather_manager().weather_at_place(message.text).weather
+                self.temp = round(weather.temperature(unit=temp_unit)['temp'])
 
-            self.location = weather.location.name
-            self.temp = round(weather.weather.temperature(unit=temp_unit)['temp'])
-            self.status_code = weather.weather.weather_code
-            self.clouds = weather.weather.clouds
+                self.clouds = weather.clouds
+                self.status_code = weather.weather_code
+            else:
+                lat = message.location.latitude
+                lon = message.location.longitude
+                weather = obs.weather_manager().weather_at_coords(lat=lat, lon=lon)
+
+                self.location = weather.location.name
+                self.temp = round(weather.weather.temperature(unit=temp_unit)['temp'])
+                self.status_code = weather.weather.weather_code
+                self.clouds = weather.weather.clouds
 
     def get_status(self):
         status = self.status_code
@@ -68,6 +73,7 @@ class Weather:
             return status_as_emoji['drizzle']
         elif int(status / 100) == 7:
             return 'something'
+
 
     def __str__(self):
         status = self.get_status()
