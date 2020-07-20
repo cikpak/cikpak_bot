@@ -123,10 +123,10 @@ class Forecast:
 
             globe_emoji = choice(['🌍', '🌎', '🌏'])
             forecast_text += (
-                f"{globe_emoji} <pre>  </pre><b>{date}</b>\n"
-                f"-<b>Weather:</b> <pre>  </pre>{status}\n"
-                f"-<b>Lowest temp:</b>  <pre>  </pre>{min} °{self.units}\n"
-                f"-<b>Highest temp:</b> <pre>  </pre>{max} °{self.units}\n\n"
+                f"{globe_emoji}<pre>  </pre><b>{date}</b>\n"
+                f"-<b>Weather:</b><pre>  </pre>{status}\n"
+                f"-<b>Lowest temp:</b><pre>  </pre>{min} °{self.units}\n"
+                f"-<b>Highest temp:</b><pre>  </pre>{max} °{self.units}\n\n"
             )
 
         return forecast_text
